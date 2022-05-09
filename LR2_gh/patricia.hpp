@@ -10,13 +10,12 @@ private:
         node_t *ptr, bool end, int *diffBit, node_t *parent); // clear
     node_t *AddNodePrivate(std::string word, uf64 value, node_t *ptr,
         bool end, int diffBit, node_t *parent, bool changeParent); // clear
-    node_t *DeleteNodePrivate(std::string word,
-        node_t *ptr);
     node_t *ReturnNodeParentPrivate(std::string word,
         node_t *ptr, bool end, int *diffBit, node_t *parent);
     node_t *ReturnUpperParentNodePrivate(node_t *searchNode, node_t *ptr,
         bool end, node_t *parent);
     node_t *ReturnUpperParentNode(node_t *searchNode);
+    void DeleteNodeNoLogging(std::string word);
     void TraversePrivate(node_t *ptr);
     void FillNodesVectorPrivate(node_t *node, std::vector<node_t *> &nodesVector);
 public:
@@ -29,6 +28,7 @@ public:
     std::vector<node_t *> FillNodesVector();
     void Save(std::ofstream &file, std::vector<node_t *> nodesVector);
     void Load(std::ifstream &file);
+    ~PATRICIA();
 };
 
 #endif // PATRICIA_
