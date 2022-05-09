@@ -1,4 +1,4 @@
-all: main
+`all: main
 
 main: main.o patricia.o base.o
 	g++ -std=c++14 -w -O2 -Wextra -Wall -Werror -Wno-sign-compare -Wno-unused-result -pedantic -lm main.o patricia.o base.o -o main
@@ -15,8 +15,11 @@ main.o: main.cpp
 run: main
 	./main
 
-run_valgrind:
+run_valgrind: main
 	valgrind ./main
+
+run_valgrind_memory: main
+	valgrind --leak-check=full ./main
 
 pack:
 	zip solution.zip Makefile *pp
