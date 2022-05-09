@@ -11,15 +11,6 @@ int main(int argc, char const *argv[])
 
     PATRICIA *patricia;
     patricia = new PATRICIA();
-    try
-    {
-        patricia = new PATRICIA();
-    }
-    catch (const std::bad_alloc &e)
-    {
-        std::cout << "ERROR: fail to allocate the requested storage space\n";
-        exit(0);
-    }
     // interface
     std::string mark;
     std::string wordChars;

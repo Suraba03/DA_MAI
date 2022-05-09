@@ -28,7 +28,7 @@ public:
     std::vector<node_t *> FillNodesVector();
     void Save(std::ofstream &file, std::vector<node_t *> nodesVector);
     void Load(std::ifstream &file);
-    ~PATRICIA();
+    //~PATRICIA();
 };
 
 #endif // PATRICIA_

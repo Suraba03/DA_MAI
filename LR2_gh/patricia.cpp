@@ -3,14 +3,14 @@
 PATRICIA::PATRICIA()
     : header(NULL) {}
 
-PATRICIA::~PATRICIA() {
+/* PATRICIA::~PATRICIA() {
     std::vector<node_t *> nodes = FillNodesVector();
     for (auto a : nodes) {
         //if (header != NULL)
         DeleteNodeNoLogging(a->word);
     }
 }
-
+ */
 node_t *PATRICIA::CreateNode(std::string word, uf64 value, int bit) {
     node_t *temp   = new node_t;
     temp->word     = word;
