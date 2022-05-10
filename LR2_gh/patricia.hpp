@@ -18,6 +18,7 @@ private:
     void DeleteNodeNoLogging(std::string word);
     void TraversePrivate(node_t *ptr);
     void FillNodesVectorPrivate(node_t *node, std::vector<node_t *> &nodesVector);
+    void ClearNode(node_t *ptr);
 public:
     PATRICIA();
     node_t *CreateNode(std::string word, uf64 value, int bit); // clear
@@ -28,7 +29,8 @@ public:
     std::vector<node_t *> FillNodesVector();
     void Save(std::ofstream &file, std::vector<node_t *> nodesVector);
     void Load(std::ifstream &file);
-    //~PATRICIA();
+    ~PATRICIA();
+    void Clear();
 };
 
 #endif // PATRICIA_

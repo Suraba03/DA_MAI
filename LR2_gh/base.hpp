@@ -10,7 +10,7 @@
 
 const int BINARY_LENGTH_OF_CHAR = 5;
 
-typedef uint_fast64_t uf64;
+typedef unsigned long long uf64;
 
 typedef struct node_t
 { 
@@ -34,5 +34,7 @@ std::string CharToBinary(char value);
 std::string StringToBinary(std::string word);
 char BinaryToChar(std::string binary);
 std::string BinaryToString(std::string binary);
+
+bool is_empty(std::ifstream& pFile);
 
 #endif // BASE_

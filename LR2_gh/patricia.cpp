@@ -3,14 +3,35 @@
 PATRICIA::PATRICIA()
     : header(NULL) {}
 
-/* PATRICIA::~PATRICIA() {
-    std::vector<node_t *> nodes = FillNodesVector();
-    for (auto a : nodes) {
-        //if (header != NULL)
-        DeleteNodeNoLogging(a->word);
-    }
+PATRICIA::~PATRICIA() {
+    Clear();
 }
- */
+
+
+void PATRICIA::ClearNode(node_t *node) {
+    if (node->left != NULL) {
+        if (node->left->bit > node->bit) {
+            ClearNode (node->left);
+        }
+    }
+    if (node->right->bit > node->bit) {
+        ClearNode (node->right);
+    }
+    delete node;
+    node = NULL;   
+}
+
+void PATRICIA::Clear() {
+    if (!header) {
+        return;
+    }
+    if (header != header->left) {
+        ClearNode(header->left);
+    }
+    delete header;
+    header = NULL;
+}
+
 node_t *PATRICIA::CreateNode(std::string word, uf64 value, int bit) {
     node_t *temp   = new node_t;
     temp->word     = word;
@@ -526,30 +547,29 @@ void PATRICIA::Save(std::ofstream &file, std::vector<node_t *> nodesVector) {
     uf64 size = nodesVector.size();
     file.write((char *)&(size), sizeof(uf64));
     for (auto a : nodesVector) {
-        char wordCStyle[256];
-        strcpy(wordCStyle, a->word.c_str());
-        int len = strlen(wordCStyle);
-        //std::cout << "[Save]: word = " << a->word << ", wordCStyle = " << wordCStyle << ", length = " << len << ", value = " << a->value << std::endl;
-        file.write((char *)&(len), sizeof(int));
-        file.write(wordCStyle, BINARY_LENGTH_OF_CHAR * len);
+        short int key_size = a->word.size();
+        //std::cout << "[Save]: word = " << a->word << ", key_size = " << key_size << ", value = " << a->value << std::endl;
+        file.write((char*)(&key_size), sizeof(short int));
+        file.write(a->word.c_str(), sizeof(char) * a->word.size());
         file.write((char *)&(a->value), sizeof(uf64));
     }
 }
 
 void PATRICIA::Load(std::ifstream &file) {
-    uf64 size;
+    uf64 size, value;
+    short int key_size;
+    PATRICIA newPatricia;
     file.read((char *)&(size), sizeof(uf64));
     //std::cout << "[Load]: " << size << " start...\n";
     for (int i = 0; i < size; ++i) {
-        int len;
-        uf64 value;
-        file.read((char *)&(len), sizeof(int));
-        //std::cout << "length" << len << std::endl;
-        char wordCStyle[256];
-        file.read(wordCStyle, BINARY_LENGTH_OF_CHAR * len);
-        file.read((char *)&(value), sizeof(uf64));
-        std::string word(wordCStyle);
-        //std::cout << "[Load]: word = " << word << ", wordCStyle = " << wordCStyle << ", length = " << len << ", value = " << value << std::endl;
-        node_t *newNode = AddNode(word, value);
+        file.read((char*)&key_size, sizeof(key_size));
+        std::string word;
+        word.resize(key_size);
+        file.read((char*)word.data(), key_size);
+        file.read((char*)&value, sizeof(uf64));
+
+        //std::cout << "[Load]: word = " << word << ", key_size = " << key_size << ", value = " << value << std::endl;
+        newPatricia.AddNode(word, value);
     }
+    std::swap(*this, newPatricia);
 }
