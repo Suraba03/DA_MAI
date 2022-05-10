@@ -1,66 +1,128 @@
 #include "patricia.hpp"
 #include "base.hpp"
 
+// FILE I/O
+
 int main(int argc, char const *argv[])
 {
     std::ios::sync_with_stdio(false);
     std::cin.tie(0);
     std::cout.tie(0);
+
+    for (int counter = 26; counter <= 41; ++counter) {
+        PATRICIA patricia;
+        std::ofstream fout;
+        std::ifstream fin;
+        //patricia = new PATRICIA();
+        // interface
+        std::string mark;
+        std::string wordChars;
+        uf64 value;       // value
+
+        std::string fileName = "tests/" + std::to_string(counter);
+        std::ifstream testFile(fileName);
+        std::cout << "test " << counter << " ------------------------------------------------------------\n";
+        while (testFile >> mark) {
+            if (mark == "+") { // full comand: "+ word 34" -- inserts node
+                testFile >> wordChars >> value;
+                std::cout << (patricia.AddNode(Lowercase(wordChars), value) ? "OK" : "Exist");        
+                std::cout << '\n';
+            } else if (mark == "-") { // full comand: "- word" -- removes node
+                testFile >> wordChars;
+                patricia.DeleteNode(Lowercase(wordChars)); // --------------------------------------------------------
+                std::cout << "\n";
+            } else if (mark == "!") { // full comands: "! Save /path/to/file" or "! Load /path/to/file"
+                testFile >> wordChars;
+                if (wordChars == "Save") {
+                    testFile >> wordChars;
+                    fout.open(wordChars, std::ios::out | std::ios::binary | std::ios::trunc);
+                    patricia.Save(fout, patricia.FillNodesVector());
+                    std::cout << "OK\n";
+                    fout.close();
+                } else if (wordChars == "Load") {
+                    testFile >> wordChars;
+                    fin.open(wordChars, std::ios::in | std::ios::binary);
+                    PATRICIA patricia;
+                    patricia.Load(fin);
+                    std::cout << "OK\n";
+                    fin.close();
+                };
+            } else { // full comand: "word" -- finds node
+                node_t *node = patricia.ReturnNode(Lowercase(mark));
+                if (!node)
+                    std::cout << "NoSuchWord";
+                else
+                    std::cout << "OK: " << node->value;
+                std::cout << '\n';
+            }
+            //std::cout << "traverse:\n";
+            //patricia.Traverse();
+            //std::cout << "print:\n";
+            //std::vector<node_t *> v = patricia.FillNodesVector();
+            //patricia.Print(v);
+
+        }
+        std::cout << "\n\n\n\n\n\n\n";
+    }
+    return 0;
+}
+
+
+// CONSOLE I/O
+
+/* 
+int main(int argc, char const *argv[])
+{
+    std::ios::sync_with_stdio(false);
+    std::cin.tie(0);
+    std::cout.tie(0);
+
+    PATRICIA patricia;
     std::ofstream fout;
     std::ifstream fin;
-
-    PATRICIA *patricia;
-    patricia = new PATRICIA();
+    //patricia = new PATRICIA();
     // interface
     std::string mark;
     std::string wordChars;
     uf64 value;       // value
-    //std::ifstream testFile("33");
-    while (std::cin/* testFile */ >> mark) {
+    while (std::cin >> mark) {
         if (mark == "+") { // full comand: "+ word 34" -- inserts node
-            std::cin/* testFile */ >> wordChars >> value;
-            node_t *addedNode = patricia->AddNode(/* StringToBinary(wordChars) */Lowercase(wordChars), value); // --------------------------------
-            if (addedNode == NULL) {
-                std::cout << "Exist";
-            } else {
-                std::cout << "OK";
-            }
-            std::cout << "\n";
+            std::cin >> wordChars >> value;
+            std::cout << (patricia.AddNode(Lowercase(wordChars), value) ? "OK" : "Exist");        
+            std::cout << '\n';
         } else if (mark == "-") { // full comand: "- word" -- removes node
-            std::cin/* testFile */ >> wordChars;
-            patricia->DeleteNode(/* StringToBinary(wordChars) */Lowercase(wordChars)); // --------------------------------------------------------
+            std::cin >> wordChars;
+            patricia.DeleteNode(Lowercase(wordChars)); // --------------------------------------------------------
             std::cout << "\n";
         } else if (mark == "!") { // full comands: "! Save /path/to/file" or "! Load /path/to/file"
-            std::cin/* testFile */ >> wordChars;
-
+            std::cin >> wordChars;
             if (wordChars == "Save") {
-                std::cin/* testFile */ >> wordChars;
+                std::cin >> wordChars;
                 fout.open(wordChars, std::ios::out | std::ios::binary | std::ios::trunc);
-                patricia->Save(fout, patricia->FillNodesVector());
+                patricia.Save(fout, patricia.FillNodesVector());
                 std::cout << "OK\n";
                 fout.close();
-
             } else if (wordChars == "Load") {
-                std::cin/* testFile */ >> wordChars;
+                std::cin >> wordChars;
                 fin.open(wordChars, std::ios::in | std::ios::binary);
-                delete patricia;
-                patricia = new PATRICIA();
-
-                patricia->Load(fin);
+                PATRICIA patricia;
+                patricia.Load(fin);
                 std::cout << "OK\n";
                 fin.close();
             };
         } else { // full comand: "word" -- finds node
-            node_t *foundNode = patricia->ReturnNode(/* StringToBinary(mark) */Lowercase(mark)); // ------------------------------------------
-            if (foundNode == NULL) {
+            node_t *node = patricia.ReturnNode(Lowercase(mark));
+            if (!node)
                 std::cout << "NoSuchWord";
-            } else {
-                std::cout << "OK: " << foundNode->value;
-            }
-            std::cout << "\n";
+            else
+                std::cout << "OK: " << node->value;
+            std::cout << '\n';
         }
-        //patricia->Traverse();
+        //std::cout << "traverse:\n";
+        //patricia.Traverse();
+        //std::cout << "print:\n";
+        //std::vector<node_t *> v = patricia.FillNodesVector();
+        //patricia.Print(v);
     }
-    delete patricia;
     return 0;
-}
+} */

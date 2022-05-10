@@ -21,7 +21,7 @@ std::string Lowercase(std::string str) {
     return str;
 }
 
-std::string CharToBinary(char value) {
+/* std::string CharToBinary(char value) {
     std::string binary = "";
     if (65 <= value && value <= 90)
         value += 32;
@@ -35,6 +35,25 @@ std::string CharToBinary(char value) {
         i++;
         code >>= 1;
     }
+    std::reverse(binary.begin(), binary.end());
+    return binary;
+} */
+
+std::string CharToBinary(char value) {
+    std::string binary = "";
+    if (65 <= value && value <= 90)
+        value += 32;
+    unsigned int code = value;
+    int i = 0;
+    while (code > 0) {
+        if ((code & 1) == 1)
+            binary.append("1", 1);
+        else
+            binary.append("0", 1);
+        i++;
+        code >>= 1;
+    }
+    binary.push_back('0');
     std::reverse(binary.begin(), binary.end());
     return binary;
 }
@@ -74,4 +93,41 @@ std::string BinaryToString(std::string binary) {
     }
     reverse(charString.begin(), charString.end());
     return charString;
+}
+
+node_t::~node_t() {
+    //delete this;
+}
+
+node_t::node_t() {
+    Initialize("", 0, -1, this, this);
+}
+
+node_t::node_t(std::string word_, uf64 value_, int bit_, node_t *left_, node_t *right_) {
+    word = word_;
+    value = value_;
+    bit = bit_;
+    left = left_;
+    if (bit == -1)
+        right = NULL;
+    else 
+        right = right_;
+}
+
+void node_t::Initialize(std::string word_, uf64 value_, int bit_, node_t *left_, node_t *right_) {
+    word = word_;
+    value = value_;
+    bit = bit_;
+    left = left_;
+    if (bit == -1)
+        right = NULL;
+    else 
+        right = right_;
+}
+
+void node_t::Initialize(std::string word_, uf64 value_, int bit_, node_t *left_) {
+    word = word_;
+    value = value_;
+    bit = bit_;
+    left = left_;
 }
