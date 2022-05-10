@@ -8,7 +8,7 @@
 #include <fstream>
 #include <cstring>
 
-const int BINARY_LENGTH_OF_CHAR = 5;
+const int BINARY_LENGTH_OF_CHAR = 8;
 
 typedef uint_fast64_t uf64;
 
@@ -19,6 +19,7 @@ typedef struct node_t
     int bit;          // starts from -1 for header
     node_t *right;    // if 1
     node_t *left;     // if 0
+    ~node_t();
 } node_t;
 
 typedef struct node_light_t

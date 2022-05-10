@@ -6,18 +6,31 @@
 class PATRICIA {
 private:
     node_t *header;
+
     node_t *ReturnNodePrivate(std::string word,
+        node_t *ptr, bool end, node_t *parent); // clear
+    
+    node_t *ReturnNodePrivateUtil(std::string word,
         node_t *ptr, bool end, int *diffBit, node_t *parent); // clear
-    node_t *AddNodePrivate(std::string word, uf64 value, node_t *ptr,
-        bool end, int diffBit, node_t *parent, bool changeParent); // clear
+    
     node_t *ReturnNodeParentPrivate(std::string word,
-        node_t *ptr, bool end, int *diffBit, node_t *parent);
+        node_t *ptr, bool end, node_t *parent);
+    
     node_t *ReturnUpperParentNodePrivate(node_t *searchNode, node_t *ptr,
         bool end, node_t *parent);
+    
     node_t *ReturnUpperParentNode(node_t *searchNode);
+
+    node_t *AddNodePrivate(std::string word, uf64 value, node_t *ptr,
+        bool end, int diffBit, node_t *parent); // clear
+
     void DeleteNodeNoLogging(std::string word);
+
     void TraversePrivate(node_t *ptr);
-    void FillNodesVectorPrivate(node_t *node, std::vector<node_t *> &nodesVector);
+    
+    void FillNodesVectorPrivate(node_t *node, std::vector<node_t *> &nodesVect0or);
+    
+    void DestructTrie(node_t *node);
 public:
     PATRICIA();
     node_t *CreateNode(std::string word, uf64 value, int bit); // clear

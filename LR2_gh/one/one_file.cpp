@@ -1,3 +1,6 @@
+#ifndef BASE_
+#define BASE_
+
 #include <iostream>
 #include <string>
 #include <vector>
@@ -5,7 +8,7 @@
 #include <fstream>
 #include <cstring>
 
-const int BINARY_LENGTH_OF_CHAR = 5;
+const int BINARY_LENGTH_OF_CHAR = 8;
 
 typedef uint_fast64_t uf64;
 
@@ -16,6 +19,7 @@ typedef struct node_t
     int bit;          // starts from -1 for header
     node_t *right;    // if 1
     node_t *left;     // if 0
+    ~node_t();
 } node_t;
 
 typedef struct node_light_t
@@ -32,21 +36,39 @@ std::string StringToBinary(std::string word);
 char BinaryToChar(std::string binary);
 std::string BinaryToString(std::string binary);
 
+#endif // BASE_
+
+#ifndef PATRICIA_
+#define PATRICIA_
+
 class PATRICIA {
 private:
     node_t *header;
+
     node_t *ReturnNodePrivate(std::string word,
+        node_t *ptr, bool end, node_t *parent); // clear
+    
+    node_t *ReturnNodePrivateUtil(std::string word,
         node_t *ptr, bool end, int *diffBit, node_t *parent); // clear
-    node_t *AddNodePrivate(std::string word, uf64 value, node_t *ptr,
-        bool end, int diffBit, node_t *parent, bool changeParent); // clear
+    
     node_t *ReturnNodeParentPrivate(std::string word,
-        node_t *ptr, bool end, int *diffBit, node_t *parent);
+        node_t *ptr, bool end, node_t *parent);
+    
     node_t *ReturnUpperParentNodePrivate(node_t *searchNode, node_t *ptr,
         bool end, node_t *parent);
+    
     node_t *ReturnUpperParentNode(node_t *searchNode);
+
+    node_t *AddNodePrivate(std::string word, uf64 value, node_t *ptr,
+        bool end, int diffBit, node_t *parent); // clear
+
     void DeleteNodeNoLogging(std::string word);
+
     void TraversePrivate(node_t *ptr);
-    void FillNodesVectorPrivate(node_t *node, std::vector<node_t *> &nodesVector);
+    
+    void FillNodesVectorPrivate(node_t *node, std::vector<node_t *> &nodesVect0or);
+    
+    void DestructTrie(node_t *node);
 public:
     PATRICIA();
     node_t *CreateNode(std::string word, uf64 value, int bit); // clear
@@ -57,8 +79,10 @@ public:
     std::vector<node_t *> FillNodesVector();
     void Save(std::ofstream &file, std::vector<node_t *> nodesVector);
     void Load(std::ifstream &file);
-    ~PATRICIA();
+    //~PATRICIA();
 };
+
+#endif // PATRICIA_
 
 void DiffBit(std::string word1, std::string word2, int *diffBit) {
     *diffBit = 0;
@@ -81,7 +105,7 @@ std::string Lowercase(std::string str) {
     return str;
 }
 
-std::string CharToBinary(char value) {
+/* std::string CharToBinary(char value) {
     std::string binary = "";
     if (65 <= value && value <= 90)
         value += 32;
@@ -95,6 +119,25 @@ std::string CharToBinary(char value) {
         i++;
         code >>= 1;
     }
+    std::reverse(binary.begin(), binary.end());
+    return binary;
+} */
+
+std::string CharToBinary(char value) {
+    std::string binary = "";
+    if (65 <= value && value <= 90)
+        value += 32;
+    unsigned int code = value;
+    int i = 0;
+    while (code > 0) {
+        if ((code & 1) == 1)
+            binary.append("1", 1);
+        else
+            binary.append("0", 1);
+        i++;
+        code >>= 1;
+    }
+    binary.push_back('0');
     std::reverse(binary.begin(), binary.end());
     return binary;
 }
@@ -136,21 +179,51 @@ std::string BinaryToString(std::string binary) {
     return charString;
 }
 
+node_t::~node_t() {
+    //delete this;
+}
+
+
 PATRICIA::PATRICIA()
     : header(NULL) {}
 
-PATRICIA::~PATRICIA() {
-    std::vector<node_t *> nodes = FillNodesVector();
-    for (auto a : nodes) {
-        if (header != NULL)
-            DeleteNodeNoLogging(a->word);
+/* void PATRICIA::DestructTrie(node_t *ptr) {
+    if (header == NULL) {
+        return;
     }
+    else {
+        if (ptr == header) {
+            if (ptr->left->bit > ptr->bit) {
+                DestructTrie(ptr->left);
+            }
+            DeleteNodeNoLogging(ptr->word);    
+        } else {
+            if (ptr->left->bit > ptr->bit) {
+                DestructTrie(ptr->left);
+            }
+            DeleteNodeNoLogging(ptr->word);
+            if (ptr->right->bit > ptr->bit) {
+                DestructTrie(ptr->right);
+            }
+        }
+    }
+} */
+
+void PATRICIA::DestructTrie(node_t *ptr) {
+/*     std::vector<node_t *> nodes = FillNodesVector();
+    for (auto a : nodes) {
+        //std::cout << a->word << " has been deleted\n"; 
+        delete a;
+    } */;
 }
+
+/* PATRICIA::~PATRICIA() {
+    DestructTrie(header);
+} */
 
 node_t *PATRICIA::CreateNode(std::string word, uf64 value, int bit) {
     node_t *temp   = new node_t;
     temp->word     = word;
-    //temp->wordChar = BinaryToString(word);
     temp->value    = value;
     if (bit == -1) {
         temp->left = temp;
@@ -164,11 +237,49 @@ node_t *PATRICIA::CreateNode(std::string word, uf64 value, int bit) {
 
 node_t *PATRICIA::ReturnNode(std::string word) {
     int diffBit;
-    return ReturnNodePrivate(word, header, false, &diffBit, header);
+    return ReturnNodePrivate(word, header, false, header);
 }
 
 // Search
-node_t *PATRICIA::ReturnNodePrivate(std::string word, node_t *ptr, bool end, int *diffBit, node_t *parent) {
+node_t *PATRICIA::ReturnNodePrivate(std::string word, node_t *ptr, bool end, node_t *parent) {
+    if (header == NULL) {
+        return NULL; // std::cout << "the container is empty\n";
+    }
+    if (ptr == header) {
+        if (end) {
+            if (ptr->word == word) {
+                return ptr;
+            } else {
+                return NULL;
+            }
+        }
+        if (ptr->left->bit <= ptr->bit) {
+            end = true;
+        }
+        return ReturnNodePrivate(word, ptr->left, end, ptr);
+    } else {
+        if (end) {
+            if (ptr->word == word) {
+                return ptr;
+            } else {
+                return NULL;
+            }
+        }
+        if (/* word[word.length() - 1 - ptr->bit] */ RetrieveBit(word, ptr->bit) == '1') { // -----------------------------------------------------
+            if (ptr->right->bit <= ptr->bit) {
+                end = true;
+            }
+            return ReturnNodePrivate(word, ptr->right, end, ptr);
+        } else {
+            if (ptr->left->bit <= ptr->bit) {
+                end = true;
+            }
+            return ReturnNodePrivate(word, ptr->left, end, ptr);
+        }
+    }
+}
+
+node_t *PATRICIA::ReturnNodePrivateUtil(std::string word, node_t *ptr, bool end, int *diffBit, node_t *parent) {
     if (header == NULL) {
         *diffBit = -1;
         return NULL; // std::cout << "the container is empty\n";
@@ -185,7 +296,7 @@ node_t *PATRICIA::ReturnNodePrivate(std::string word, node_t *ptr, bool end, int
         if (ptr->left->bit <= ptr->bit) {
             end = true;
         }
-        return ReturnNodePrivate(word, ptr->left, end, diffBit, ptr);
+        return ReturnNodePrivateUtil(word, ptr->left, end, diffBit, ptr);
     } else {
         if (end) {
             if (ptr->word == word) {
@@ -199,12 +310,12 @@ node_t *PATRICIA::ReturnNodePrivate(std::string word, node_t *ptr, bool end, int
             if (ptr->right->bit <= ptr->bit) {
                 end = true;
             }
-            return ReturnNodePrivate(word, ptr->right, end, diffBit, ptr);
+            return ReturnNodePrivateUtil(word, ptr->right, end, diffBit, ptr);
         } else {
             if (ptr->left->bit <= ptr->bit) {
                 end = true;
             }
-            return ReturnNodePrivate(word, ptr->left, end, diffBit, ptr);
+            return ReturnNodePrivateUtil(word, ptr->left, end, diffBit, ptr);
         }
     }
 }
@@ -248,14 +359,14 @@ node_t *PATRICIA::ReturnUpperParentNodePrivate(node_t *searchNode, node_t *ptr, 
 
 node_t *PATRICIA::AddNode(std::string word, uf64 value) {
     int diffBit;
-    node_t *addNode = ReturnNodePrivate(word, header, false, &diffBit, header); // should be included to prev if statement
+    node_t *addNode = ReturnNodePrivateUtil(word, header, false, &diffBit, header);
     if (addNode != NULL) {
         return NULL;    
     }
-    return AddNodePrivate(word, value, header, false, diffBit, header, false);;
+    return AddNodePrivate(word, value, header, false, diffBit, header);;
 }
 
-node_t *PATRICIA::AddNodePrivate(std::string word, uf64 value, node_t *ptr, bool end, int diffBit, node_t *parent, bool changeParent) {
+node_t *PATRICIA::AddNodePrivate(std::string word, uf64 value, node_t *ptr, bool end, int diffBit, node_t *parent) {
     if (header == NULL) { // container is empty
         header = CreateNode(word, value, -1);
         return header;
@@ -284,10 +395,8 @@ node_t *PATRICIA::AddNodePrivate(std::string word, uf64 value, node_t *ptr, bool
         }
         if (ptr->left->bit <= ptr->bit || diffBit <= ptr->left->bit) { // something there...
             end = true;
-            if (diffBit <= ptr->left->bit)
-                changeParent = true;
         }
-        return AddNodePrivate(word, value, ptr->left, end, diffBit, ptr, changeParent);
+        return AddNodePrivate(word, value, ptr->left, end, diffBit, ptr);
     } else {
         if (end) {
             // create new node
@@ -312,17 +421,13 @@ node_t *PATRICIA::AddNodePrivate(std::string word, uf64 value, node_t *ptr, bool
         if (/* word[word.length() - 1 - ptr->bit] */ RetrieveBit(word, ptr->bit) == '1') { // -------------------------------------------------------------------------
             if (ptr->right->bit <= ptr->bit || diffBit <= ptr->right->bit) { // something there...
                 end = true;
-                if (diffBit <= ptr->right->bit)
-                    changeParent = true;
             }
-            return AddNodePrivate(word, value, ptr->right, end, diffBit, ptr, changeParent);
+            return AddNodePrivate(word, value, ptr->right, end, diffBit, ptr);
         } else {
             if (ptr->left->bit <= ptr->bit || diffBit <= ptr->left->bit) { // something there...
                 end = true;
-                if (diffBit <= ptr->left->bit)
-                    changeParent = true;
             }
-            return AddNodePrivate(word, value, ptr->left, end, diffBit, ptr, changeParent);
+            return AddNodePrivate(word, value, ptr->left, end, diffBit, ptr);
         }
     }
 
@@ -331,8 +436,8 @@ node_t *PATRICIA::AddNodePrivate(std::string word, uf64 value, node_t *ptr, bool
 // delete
 void PATRICIA::DeleteNode(std::string word) {
     // to optimize
-    int diffBit;
-    node_t *aNode = ReturnNodePrivate(word, header, false, &diffBit, header); // node to delete
+    //int diffBit;
+    node_t *aNode = ReturnNode(word); // node to delete
     // case 0 -- doesn't exist
     if (aNode == NULL) {
         std::cout << "NoSuchWord";
@@ -347,8 +452,7 @@ void PATRICIA::DeleteNode(std::string word) {
         return;
     }
 
-    int diffBit1;
-    node_t *bNode = ReturnNodeParentPrivate(word, header, false, &diffBit1, header); // aNode parent
+    node_t *bNode = ReturnNodeParentPrivate(word, header, false, header); // aNode parent
     // case 1 -- aNode == bNode
     if (aNode == bNode) {
         node_t *aNodeParent = ReturnUpperParentNode(aNode);
@@ -407,8 +511,7 @@ void PATRICIA::DeleteNode(std::string word) {
         // case 2.1 bNode isn't a leaf, it has two children and one reverse pointer
         else {
             int diffBit2;
-            node_t *gNode = ReturnNodeParentPrivate(bNode->word,
-                header, false, &diffBit2, header);
+            node_t *gNode = ReturnNodeParentPrivate(bNode->word, header, false, header);
             if (bNode->right == aNode) { // left subtree
                 // gNode and aNode case
                 if (gNode->right == bNode) {
@@ -449,8 +552,7 @@ void PATRICIA::DeleteNode(std::string word) {
 
 void PATRICIA::DeleteNodeNoLogging(std::string word) {
     // to optimize
-    int diffBit;
-    node_t *aNode = ReturnNodePrivate(word, header, false, &diffBit, header); // node to delete
+    node_t *aNode = ReturnNode(word); // node to delete
     // case 0 -- doesn't exist
     if (aNode == NULL) {
         return;
@@ -463,8 +565,7 @@ void PATRICIA::DeleteNodeNoLogging(std::string word) {
         return;
     }
 
-    int diffBit1;
-    node_t *bNode = ReturnNodeParentPrivate(word, header, false, &diffBit1, header); // aNode parent
+    node_t *bNode = ReturnNodeParentPrivate(word, header, false, header); // aNode parent
     // case 1 -- aNode == bNode
     if (aNode == bNode) {
         node_t *aNodeParent = ReturnUpperParentNode(aNode);
@@ -519,9 +620,7 @@ void PATRICIA::DeleteNodeNoLogging(std::string word) {
         }
         // case 2.1 bNode isn't a leaf, it has two children and one reverse pointer
         else {
-            int diffBit2;
-            node_t *gNode = ReturnNodeParentPrivate(bNode->word,
-                header, false, &diffBit2, header);
+            node_t *gNode = ReturnNodeParentPrivate(bNode->word, header, false, header);
             if (bNode->right == aNode) { // left subtree
                 // gNode and aNode case
                 if (gNode->right == bNode) {
@@ -559,9 +658,8 @@ void PATRICIA::DeleteNodeNoLogging(std::string word) {
 }
 
 
-node_t *PATRICIA::ReturnNodeParentPrivate(std::string word, node_t *ptr, bool end, int *diffBit, node_t *parent) {
+node_t *PATRICIA::ReturnNodeParentPrivate(std::string word, node_t *ptr, bool end, node_t *parent) {
     if (header == NULL) {
-        *diffBit = -1;
         return NULL; // std::cout << "the container is empty\n";
     }
     if (ptr == header) {
@@ -569,20 +667,18 @@ node_t *PATRICIA::ReturnNodeParentPrivate(std::string word, node_t *ptr, bool en
             if (ptr->word == word) {
                 return parent;
             } else {
-                DiffBit(word, ptr->word, diffBit);
                 return NULL;
             }
         }
         if (ptr->left->bit <= ptr->bit) {
             end = true;
         }
-        return ReturnNodeParentPrivate(word, ptr->left, end, diffBit, ptr);
+        return ReturnNodeParentPrivate(word, ptr->left, end, ptr);
     } else {
         if (end) {
             if (ptr->word == word) {
                 return parent;
             } else {
-                DiffBit(word, ptr->word, diffBit);
                 return NULL;
             }
         }
@@ -590,12 +686,12 @@ node_t *PATRICIA::ReturnNodeParentPrivate(std::string word, node_t *ptr, bool en
             if (ptr->right->bit <= ptr->bit) {
                 end = true;
             }
-            return ReturnNodeParentPrivate(word, ptr->right, end, diffBit, ptr);
+            return ReturnNodeParentPrivate(word, ptr->right, end, ptr);
         } else {
             if (ptr->left->bit <= ptr->bit) {
                 end = true;
             }
-            return ReturnNodeParentPrivate(word, ptr->left, end, diffBit, ptr);
+            return ReturnNodeParentPrivate(word, ptr->left, end, ptr);
         }
     }
 }
@@ -635,7 +731,6 @@ void PATRICIA::TraversePrivate(node_t *ptr) {
 std::vector<node_t *> PATRICIA::FillNodesVector() {
     std::vector<node_t *> nodesVector;
     if (header == NULL) {
-        //std::cout << "Trie is empty\n";
         return nodesVector;
     }
     FillNodesVectorPrivate(header, nodesVector);
@@ -663,12 +758,13 @@ void PATRICIA::Save(std::ofstream &file, std::vector<node_t *> nodesVector) {
     uf64 size = nodesVector.size();
     file.write((char *)&(size), sizeof(uf64));
     for (auto a : nodesVector) {
-        char wordCStyle[256];
+/*         char wordCStyle[256];
         strcpy(wordCStyle, a->word.c_str());
-        int len = strlen(wordCStyle);
+        int len = strlen(wordCStyle); */
+        int len = a->word.length();
         //std::cout << "[Save]: word = " << a->word << ", wordCStyle = " << wordCStyle << ", length = " << len << ", value = " << a->value << std::endl;
         file.write((char *)&(len), sizeof(int));
-        file.write(wordCStyle, BINARY_LENGTH_OF_CHAR * len);
+        file.write(a->word.c_str(), BINARY_LENGTH_OF_CHAR * len);
         file.write((char *)&(a->value), sizeof(uf64));
     }
 }
@@ -696,60 +792,54 @@ int main(int argc, char const *argv[])
     std::ios::sync_with_stdio(false);
     std::cin.tie(0);
     std::cout.tie(0);
-    std::ofstream fout;
-    std::ifstream fin;
 
-    PATRICIA *patricia = new PATRICIA();
-    // interface
-    std::string mark;
-    std::string wordChars;
-    uf64 value;       // value
-    //std::ifstream testFile("33");
-    while (std::cin/* testFile */ >> mark) {
-        if (mark == "+") { // full comand: "+ word 34" -- inserts node
-            std::cin/* testFile */ >> wordChars >> value;
-            node_t *addedNode = patricia->AddNode(/* StringToBinary(wordChars) */Lowercase(wordChars), value); // --------------------------------
-            if (addedNode == NULL) {
-                std::cout << "Exist";
-            } else {
-                std::cout << "OK";
+    for (int counter = 34; counter <= 34; ++counter) {
+        PATRICIA patricia;
+        std::ofstream fout;
+        std::ifstream fin;
+        //patricia = new PATRICIA();
+        // interface
+        std::string mark;
+        std::string wordChars;
+        uf64 value;       // value
+
+        std::string fileName = "tests/" + std::to_string(counter);
+        std::ifstream testFile(fileName);
+        std::cout << "test " << counter << " ------------------------------------------------------------\n";
+        while (/* std::cin */testFile >> mark) {
+            if (mark == "+") { // full comand: "+ word 34" -- inserts node
+                /* std::cin */testFile >> wordChars >> value;
+                std::cout << (patricia.AddNode(Lowercase(wordChars), value) ? "OK" : "Exist");
+                std::cout << '\n';
+            } else if (mark == "-") { // full comand: "- word" -- removes node
+                /* std::cin */testFile >> wordChars;
+                patricia.DeleteNode(/* StringToBinary(wordChars) */Lowercase(wordChars)); // --------------------------------------------------------
+                std::cout << "\n";
+            } else if (mark == "!") { // full comands: "! Save /path/to/file" or "! Load /path/to/file"
+                /* std::cin */testFile >> wordChars;
+                if (wordChars == "Save") {
+                    /* std::cin */testFile >> wordChars;
+                    fout.open(wordChars, std::ios::out | std::ios::binary | std::ios::trunc);
+                    patricia.Save(fout, patricia.FillNodesVector());
+                    std::cout << "OK\n";
+                    fout.close();
+                } else if (wordChars == "Load") {
+                    /* std::cin */testFile >> wordChars;
+                    fin.open(wordChars, std::ios::in | std::ios::binary);
+                    PATRICIA patricia;
+                    patricia.Traverse();
+
+                    patricia.Load(fin);
+                    std::cout << "OK\n";
+                    fin.close();
+                };
+            } else { // full comand: "word" -- finds node
+                std::cout << (patricia.ReturnNode(Lowercase(mark)) ? "OK" : "Exist");
+                std::cout << '\n';
             }
-            std::cout << "\n";
-        } else if (mark == "-") { // full comand: "- word" -- removes node
-            std::cin/* testFile */ >> wordChars;
-            patricia->DeleteNode(/* StringToBinary(wordChars) */Lowercase(wordChars)); // --------------------------------------------------------
-            std::cout << "\n";
-        } else if (mark == "!") { // full comands: "! Save /path/to/file" or "! Load /path/to/file"
-            std::cin/* testFile */ >> wordChars;
-
-            if (wordChars == "Save") {
-                std::cin/* testFile */ >> wordChars;
-                fout.open(wordChars, std::ios::out | std::ios::binary | std::ios::trunc);
-                patricia->Save(fout, patricia->FillNodesVector());
-                std::cout << "OK\n";
-                fout.close();
-
-            } else if (wordChars == "Load") {
-                std::cin/* testFile */ >> wordChars;
-                fin.open(wordChars, std::ios::in | std::ios::binary);
-                delete patricia;
-                patricia = new PATRICIA();
-
-                patricia->Load(fin);
-                std::cout << "OK\n";
-                fin.close();
-            };
-        } else { // full comand: "word" -- finds node
-            node_t *foundNode = patricia->ReturnNode(/* StringToBinary(mark) */Lowercase(mark)); // ------------------------------------------
-            if (foundNode == NULL) {
-                std::cout << "NoSuchWord";
-            } else {
-                std::cout << "OK: " << foundNode->value;
-            }
-            std::cout << "\n";
+            //patricia.Traverse();
         }
-        //patricia->Traverse();
+        std::cout << "\n\n\n\n\n\n\n";
     }
-    delete patricia;
     return 0;
 }
