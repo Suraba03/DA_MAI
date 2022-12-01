@@ -1,0 +1,20 @@
+insert pow_3: average time = 0.030s = 30ms
+insert pow_4: average time = 0.140s = 140ms
+insert pow_5: average time = 1.400s = 1400ms
+insert pow_6: average time = 17.040s = 17040ms
+
+load3: 30ms
+load4: 120ms
+load5: 1100ms
+load6: 12060ms
+
+find pow_3: average time = 0.006s = 6ms
+find pow_4: average time = 0.030s = 30ms
+find pow_5: average time = 0.350s = 350ms
+find pow_6: average time = 7.000s = 7000ms
+
+delete pow_3: average time = 0.010s = 10ms
+delete pow_4: average time = 0.080s = 80ms
+delete pow_5: average time = 0.900s = 900ms
+delete pow_6: average time = 11.500s = 11500ms
+

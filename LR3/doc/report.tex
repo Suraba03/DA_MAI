@@ -1,0 +1,124 @@
+\documentclass[12pt]{article}
+
+\usepackage{fullpage}
+\usepackage{multicol,multirow}
+\usepackage{tabularx}
+\usepackage{ulem}
+\usepackage[utf8]{inputenc}
+\usepackage[russian]{babel}
+\usepackage{listings}
+\usepackage[T2A]{fontenc}
+
+\begin{document}
+
+\section*{Лабораторная работа №\,3 по курсу дискрeтного анализа: Исследование качества программ}
+
+Выполнил студент группы 8О-207Б-20 МАИ \textit{Чекменёв Вячеслав Алексеевич}.
+
+\subsection*{Условие}
+
+Общая постановка задачи:
+\begin{enumerate}
+\item Исследовать программу на наличие утечек памяти с помощью утилиты valgrind.
+
+\item Исследовать скорость выполнения программы с помощью утилиты gprof, выявить недочеты производительности.
+
+\end{enumerate}
+
+\subsection*{Дневник выполнения работы}
+
+\subsection{Valgrind -- memory}
+Проанализируем нашу программу на наличие утечек памяти с помощью valgrind. \\
+Запустим программу: \\
+\texttt{valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all 
+--leak-resolution=med ./main < test.txt} \\\\
+Возьмем тест на 10000 строк с функциями Save, Load, AddNode, DeleteNode, ReturnNode\\
+Проанализируем полученный отчет: \\
+\begin{lstlisting}
+==15100== LEAK SUMMARY:
+==15100==    definitely lost: 0 bytes in 0 blocks
+==15100==    indirectly lost: 0 bytes in 0 blocks
+==15100==      possibly lost: 0 bytes in 0 blocks
+==15100==    still reachable: 122,880 bytes in 6 blocks
+==15100==         suppressed: 0 bytes in 0 blocks
+==15100== 
+==15100== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+\end{lstlisting}
+Категория "still reachable" в отчете об утечке Valgrind говорит о том, что эти блоки не были освобождены, но они могли бы быть освобождены, потому что программа все еще отслеживала указатели на эти блоки памяти.\\
+
+
+Эту ошибку можно исправить убрав три строчки кода:
+
+\begin{lstlisting}
+std::ios::sync_with_stdio(false);
+std::cin.tie(0);
+std::cout.tie(0); 
+\end{lstlisting}
+
+Теперь посмотрим, что нам выдает Valgrind:
+\begin{lstlisting}
+==3703== HEAP SUMMARY:
+==3703==   total heap usage: 23,235,515 allocs, 23,235,515 frees, 774,349,106 bytes allocated
+==3703== LEAK SUMMARY:
+==3703==    definitely lost: 0 bytes in 0 blocks
+==3703==    indirectly lost: 0 bytes in 0 blocks
+==3703==      possibly lost: 0 bytes in 0 blocks
+==3703==    still reachable: 0 bytes in 0 blocks
+==3703==         suppressed: 0 bytes in 0 blocks
+==3703== 
+==3703== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+\end{lstlisting}
+
+\subsubsection{gprof -- time}
+
+Исследуем нашу программу с помощью gprof. \\
+Для использования профилятора следует добавить флаг -pg в команды компиляции. После этого можно запускать программу обычным образом.
+Возьмем тест на 25000 строк с функциями Save, Load, AddNode, DeleteNode, ReturnNode\\
+После завершения нашей программы будет сгенерирован файл отчета \textbf{gmon.out}, запустим утилиту gprof для получения анализа: \\
+\texttt{gprof main.o > gprof.txt} \\\\
+Проанализируем полученный отчет: \\
+\begin{table}[ht]
+\centering
+\begin{tabular}{p{0.1\linewidth} | p{0.2\linewidth} | p{0.3\linewidth}}
+\hline
+seconds-self & calls & name  \\ \hline
+   2.83    &   156591265 &   CharToBinary                     \\ \hline
+   0.91    &   158215535 &   RetrieveBit                      \\ \hline
+   0.30    &     4459264 &   ReturnNodePrivate       \\ \hline
+   0.00    &        6419 &   ReturnNode              \\ \hline
+   0.21    &     4446338  &  AddNodePrivate          \\ \hline 
+   0.09    &     4446558  &  AddNode                 \\ \hline
+   0.00    &       6287   &  DeleteNode              \\ \hline 
+   0.04    &       2993   &  Load                    \\ \hline     
+   0.01    &       3056   &  Save                    \\ \hline 
+   0.03    &       3055   &  FillNodesVectorPrivate  \\ \hline
+   0.00    &       3056   &  FillNodesVector         \\ \hline     
+   0.04    &       2993   &  ClearNode               \\ \hline     
+\end{tabular}
+\end{table}
+
+Как мы видим, много времени тратится на функцию ReturnNodePrivate, это из-за того, что здесь при каждом рекурсивном вызове функции ReturnNodePrivate проверяется header на NULL, этого можно делать один раз.
+
+\begin{lstlisting}
+    if (header == NULL) {
+        return NULL;
+    }
+\end{lstlisting}
+
+Также много времени тратится на функции CharToBinary, RetrieveBit, в них можно было использовать побитовые операции вместо циклов, однако я этого не сделал
+
+\subsection*{Найденные недочеты}
+\begin{table}[ht]
+\centering
+\begin{tabular}{p{0.4\linewidth} | p{0.4\linewidth}}
+\hline
+Проблема & Инструмент \\ \hline
+Утечка памяти "still reachable" & valgrind \\ \hline
+\end{tabular}
+\end{table}
+
+\subsection*{Выводы}
+После использования таких инструментов как gprof и valgrind стало ясно что они действительно способны указать на проблемные места в программе. С помощью gprof было найдено вычислено время выполнения каждой функции в программе. Инструмент valgrind помог найти утечки памяти в программе.
+
+\end{document}
+
