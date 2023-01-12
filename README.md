@@ -13,4 +13,4 @@
 ### LR9 -- Dijkstra algo
 ## Course project
   + part 1: Fast Furry Transform
-  + part 2: Audiosearch
+  + part 2: Audiosearch (search for samples in anime openings)
