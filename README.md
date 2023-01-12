@@ -11,3 +11,6 @@
 ### LR7 -- amount of numbers. dymamic programming
 ### LR8 -- max triangle. greedy algo
 ### LR9 -- Dijkstra algo
+## Course project
+  + part 1: Fast Furry Transform
+  + part 2: Audiosearch
