@@ -1,1 +1,1 @@
-# Оба ахрива надо распаковать и перенести файлы в родительскую папку
+# Both archives need to be unzipped and transferred to the parent folder
