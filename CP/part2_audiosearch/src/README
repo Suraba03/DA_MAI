@@ -1,0 +1,6 @@
+names: files to index
+query: files with queries
+
+compile: g++ main.cpp
+indexing EXAMPLE: ./a.out index --input names.txt --output base.dat
+searching EXAMPLE: ./a.out search --index base.dat --input query.txt --output result.txt
